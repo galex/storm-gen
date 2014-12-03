@@ -156,14 +156,8 @@ public class EntityProcessor extends ClassProcessor {
                     stormEnv.getLogger().error(TAG, e, field);
                 }
             } else {
-
                 entityModel.addField(new UnknownTypeFieldModel(field.getSimpleName().toString(), javaType));
-
             }
-
-
-
-
             // TODO verify getter + setter
         } else if (hasId) {
             abort("@Id fields cannot be transient", field);

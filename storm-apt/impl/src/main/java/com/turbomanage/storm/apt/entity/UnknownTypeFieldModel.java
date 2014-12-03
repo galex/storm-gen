@@ -30,12 +30,12 @@ public class UnknownTypeFieldModel implements PersistedField {
 
     @Override
     public String getConverterName() {
-        return null;
+        return Object.class.getSimpleName();
     }
 
     @Override
     public String getQualifiedConverterClass() {
-        return null;
+        return Object.class.getName();
     }
 
     @Override
