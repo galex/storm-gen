@@ -18,7 +18,7 @@ package com.turbomanage.storm.apt;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.turbomanage.storm.apt.entity.FieldModel;
+import com.turbomanage.storm.apt.entity.PersistedField;
 import com.turbomanage.storm.types.EnumConverter;
 
 public abstract class ClassModel {
@@ -26,17 +26,17 @@ public abstract class ClassModel {
 	private String className;
 	private String packageName;
 	protected List<String> imports = new ArrayList<String>();
-	protected List<FieldModel> fields = new ArrayList<FieldModel>();
+	protected List<PersistedField> fields = new ArrayList<PersistedField>();
 
 	public List<String> getImports() {
 		return imports;
 	}
 
-	public List<FieldModel> getFields() {
+	public List<PersistedField> getFields() {
 		return fields;
 	}
 
-	public void addField(FieldModel field) {
+	public void addField(PersistedField field) {
 		fields.add(field);
 		if (field.isEnum()) {
 			addImport(EnumConverter.class.getCanonicalName());

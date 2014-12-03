@@ -220,6 +220,11 @@ public class StormEnvironment {
 				"Could not find converter for type " + javaType);
 	}
 
+	public boolean hasConverterForType(String javaType) {
+
+		return typeMap.containsKey(javaType);
+	}
+
 	public List<ConverterModel> getConverters() {
 		return converters;
 	}

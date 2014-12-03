@@ -30,6 +30,7 @@
  */
 package com.turbomanage.storm.apt.entity;
 
+import com.turbomanage.storm.apt.StringUtils;
 import com.turbomanage.storm.apt.converter.ConverterModel;
 import com.turbomanage.storm.types.TypeConverter.SqlType;
 
@@ -38,7 +39,7 @@ import com.turbomanage.storm.types.TypeConverter.SqlType;
  *
  * @author David M. Chandler
  */
-public class FieldModel {
+public class FieldModel implements PersistedField {
 
 	private String fieldName, colName, javaType;
 	private boolean isEnum, isEntityId;
@@ -66,7 +67,7 @@ public class FieldModel {
 		}
 	}
 	
-	void setColName(String colName) {
+	public void setColName(String colName) {
 		this.colName = colName;
 	}
 
@@ -118,30 +119,14 @@ public class FieldModel {
 	}
 
 	public String getSetter() {
-		return "set" + capFirst(fieldName);
+		return "set" + StringUtils.capFirst(fieldName);
 	}
 
 	public String getGetter() {
 		if ("boolean".equals(javaType))
-			return "is" + capFirst(fieldName);
+			return "is" + StringUtils.capFirst(fieldName);
 		else
-			return "get" + capFirst(fieldName);
-	}
-
-	/**
-	 * Capitalizes the first letter to create a valid getter/setter name.
-	 *
-	 * @param String
-	 * @return String
-	 */
-	private String capFirst(String anyName) {
-		// obscure Java convention:
-		// if second letter capitalized, leave it alone
-		if (anyName.length() > 1)
-			if (anyName.charAt(1) >= 'A' && anyName.charAt(1) <= 'Z')
-				return anyName;
-		String capFirstLetter = anyName.substring(0, 1).toUpperCase();
-		return capFirstLetter + anyName.substring(1);
+			return "get" + StringUtils.capFirst(fieldName);
 	}
 
 	public boolean isNullable() {
@@ -152,11 +137,11 @@ public class FieldModel {
 		return isEnum;
 	}
 
-	boolean isEntityId() {
+	public boolean isEntityId() {
 		return isEntityId;
 	}
 
-	void setEntityId(boolean isEntityId) {
+	public void setEntityId(boolean isEntityId) {
 		this.isEntityId = isEntityId;
 	}
 }

@@ -97,8 +97,8 @@ public class EntityModel extends ClassModel {
 		this.tableName = tableName;
 	}
 
-	public FieldModel getIdField() {
-		for (FieldModel f : this.fields) {
+	public PersistedField getIdField() {
+		for (PersistedField f : this.fields) {
 			if (f.isEntityId()) {
 				return f;
 			}
@@ -106,7 +106,7 @@ public class EntityModel extends ClassModel {
 		return null;
 	}
 
-	void setIdField(FieldModel idField) {
+	void setIdField(PersistedField idField) {
 		idField.setEntityId(true);
 		// TODO use a view instead
 		idField.setColName("_id");

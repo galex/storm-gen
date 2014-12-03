@@ -28,6 +28,7 @@ import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
+import android.text.TextUtils;
 import com.turbomanage.storm.SQLiteDao;
 import com.turbomanage.storm.api.Entity;
 import com.turbomanage.storm.api.Id;
@@ -126,33 +127,43 @@ public class EntityProcessor extends ClassProcessor {
                     if (hasId) {
                         abort("@Id invalid on enums", field);
                     } else {
-                        FieldModel fm = new FieldModel(field.getSimpleName().toString(), javaType, true, stormEnv.getConverterForType("java.lang.Enum"));
+                        PersistedField fm = new FieldModel(field.getSimpleName().toString(), javaType, true, stormEnv.getConverterForType("java.lang.Enum"));
                         entityModel.addField(fm);
                     }
                     return;
                 }
             }
             // Verify supported type
-            try {
-                ConverterModel converter = stormEnv.getConverterForType(javaType);
-                FieldModel f = new FieldModel(field.getSimpleName().toString(), javaType, false, converter);
-                if (hasId) {
-                    if (entityModel.getIdField() == null) {
-                        if ("long".equals(f.getJavaType())) {
-                            entityModel.setIdField(f);
+            if (stormEnv.hasConverterForType(javaType)) {
+                try {
+                    ConverterModel converter = stormEnv.getConverterForType(javaType);
+                    PersistedField f = new FieldModel(field.getSimpleName().toString(), javaType, false, converter);
+                    if (hasId) {
+                        if (entityModel.getIdField() == null) {
+                            if ("long".equals(f.getJavaType())) {
+                                entityModel.setIdField(f);
+                            } else {
+                                abort("@Id field must be of type long", field);
+                            }
                         } else {
-                            abort("@Id field must be of type long", field);
+                            abort("Duplicate @Id", field);
                         }
-                    } else {
-                        abort("Duplicate @Id", field);
                     }
+                    entityModel.addField(f);
+                } catch (TypeNotSupportedException e) {
+                    stormEnv.getLogger().error(TAG + "inspectField", e, field);
+                } catch (Exception e) {
+                    stormEnv.getLogger().error(TAG, e, field);
                 }
-                entityModel.addField(f);
-            } catch (TypeNotSupportedException e) {
-                stormEnv.getLogger().error(TAG + "inspectField", e, field);
-            } catch (Exception e) {
-                stormEnv.getLogger().error(TAG, e, field);
+            } else {
+
+                entityModel.addField(new UnknownTypeFieldModel(field.getSimpleName().toString(), javaType));
+
             }
+
+
+
+
             // TODO verify getter + setter
         } else if (hasId) {
             abort("@Id fields cannot be transient", field);
@@ -165,14 +176,14 @@ public class EntityProcessor extends ClassProcessor {
     private void inspectId() {
         if (entityModel.getIdField() == null) {
             // Default to field named "id"
-            List<FieldModel> fields = entityModel.getFields();
-            for (FieldModel f : fields) {
+            List<PersistedField> fields = entityModel.getFields();
+            for (PersistedField f : fields) {
                 if (EntityModel.DEFAULT_ID_FIELD.equals(f.getFieldName())) {
                     entityModel.setIdField(f);
                 }
             }
         }
-        FieldModel idField = entityModel.getIdField();
+        PersistedField idField = entityModel.getIdField();
         if (idField != null && "long".equals(idField.getJavaType())) {
             return;
         } else {
@@ -185,10 +196,12 @@ public class EntityProcessor extends ClassProcessor {
      * see http://stackoverflow.com/questions/7687829/java-6-annotation-processing-getting-a-class-from-an-annotation
      */
     private static TypeMirror getBaseDaoTypeMirror(Entity entity) {
-        try {
-            entity.baseDaoClass();
-        } catch (MirroredTypeException mte) {
-            return mte.getTypeMirror();
+        if(entity != null) {
+            try {
+                entity.baseDaoClass();
+            } catch (MirroredTypeException mte) {
+                return mte.getTypeMirror();
+            }
         }
         return null;
     }
@@ -199,7 +212,9 @@ public class EntityProcessor extends ClassProcessor {
      * @return BaseDaoModel containing the package name + Class name
      */
     private static BaseDaoModel getBaseDaoClass(Entity entity) {
+        String qualifiedName = SQLiteDao.class.getName();
         TypeMirror typeMirror = getBaseDaoTypeMirror(entity);
-        return new BaseDaoModel(typeMirror);
+        if(typeMirror != null) qualifiedName = typeMirror.toString();
+        return new BaseDaoModel(qualifiedName);
     }
 }
